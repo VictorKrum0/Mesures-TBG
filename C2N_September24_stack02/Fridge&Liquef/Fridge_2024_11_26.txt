@@ -1,0 +1,1 @@
+Time      T 1Kpot       T Still      P Still       P cond        1K pot Level        Dewar Level         T MC        T Bath        T lambda         T Magnet
