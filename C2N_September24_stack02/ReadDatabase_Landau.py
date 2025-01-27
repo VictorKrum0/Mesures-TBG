@@ -8,15 +8,15 @@ from qcodes.dataset import initialise_database, initialise_or_create_database_at
 
 # Excution parameters -----------------------------------------------------------------
 if True :
-    initialise_or_create_database_at("Database_copy/Sofiane_Michael_TBG02.db") #open the right database
+    initialise_or_create_database_at("Database/Sofiane_Michael_TBG02.db") #open the right database
     #experiment_name = "Landau"
-    run_ID = 139
-    odd = False # selects either odd (True) or even (False) rows of the landau map
+    run_ID = 180
+    odd = True # selects either odd (True) or even (False) rows of the landau map
 
     Landau_plot = True
 
-    row_select_plot = False
-    row_select_idxs = [0,80]
+    row_select_plot = True
+    row_select_idxs = [0,1,2,3,4,5]
 
     col_select_plot = False
     col_select_idxs = [10]
@@ -27,31 +27,30 @@ if True :
     dataset = load_by_run_spec(captured_run_id = run_ID) # access the desired item from the open database
     data = dataset.get_parameter_data() # the dictionary with nested dictionaries for each dependent parameter
 
-    Rxx = data['Rxx']['Rxx'].reshape((422,301))
-    print(Rxx.shape)
-    Rxy = data['Rxy']['Rxy'].reshape((422,301))
-    print(Rxy.shape)
-    B = data['Rxx']['IPS120_B'].reshape((422,301))
+    Rc = data['Rc']['Rc'].reshape((401,151))
+    print(Rc.shape)
+    R = data['R']['R'].reshape((401,151))
+    print(R.shape)
+    B = data['Rc']['IPS120_B'].reshape((401,151))
     print(B.shape)
-    Vbg = data['Rxx']['HV090_CH02_voltage'].reshape((422,301))
+    Vbg = data['Rc']['HV090_CH02_voltage'].reshape((401,151))
     print(Vbg.shape)
-    all_parameters = [Rxx, Rxy, B, Vbg]
+    all_parameters = [Rc, R, B, Vbg]
 # --------------------------------------------------------------------------------------
 
 # Transformations on the data -----------------------------------------------------------
-if True :
-    M = 1e4
-    Rxy = np.clip(Rxy, 0, M)  # limit values in the array to not exceed M
-    M = 5e2
-    dRxx = np.diff(Rxx, axis=1) # differentiate the array along the voltage direction - must adapt axes
-    dRxx = np.clip(dRxx, -M, M)  # limit values in the array to not exceed M
+dRc = np.diff(Rc, axis=1) # differentiate the array along the voltage direction - must adapt axes
+if False :
+    M = 1e5
+    R = np.clip(R, 0, M)  # limit values in the array to not exceed M
+    M = 1e5 
+    dRc = np.clip(dRc, -M, M)  # limit values in the array to not exceed M
     M = 2e4
-    Rxx = np.clip(Rxx, 0, M)  # limit values in the array to not exceed M
-
-    offset = 1 if odd else 0
+    Rc = np.clip(Rc, 0, M)  # limit values in the array to not exceed M
+offset = 1 if odd else 0
 # --------------------------------------------------------------------------------------
 
-# Plot the data - Color mesh for Rxx, Rxy, DRxy ----------------------------------------
+# Plot the data - Color mesh for Rc, R, DR ----------------------------------------
 if Landau_plot :
     fig = plt.figure(figsize=(18, 5))
 
@@ -78,13 +77,13 @@ if Landau_plot :
         ax.set_ylabel("B (T)")
         ax.set_xlabel("Vbg (V)")
 
-    ax1.set_title("Rxx")
-    ax2.set_title("Rxy")
-    ax3.set_title("dRxx")
+    ax1.set_title("Rc")
+    ax2.set_title("R")
+    ax3.set_title("dRc")
 
-    plt.colorbar(ax1.pcolormesh(Vbg[offset::2], B[offset::2], Rxx[offset::2], cmap='RdBu'), cb1)
-    plt.colorbar(ax2.pcolormesh(Vbg[offset::2], B[offset::2], Rxy[offset::2], cmap='RdBu'), cb2)
-    plt.colorbar(ax3.pcolormesh(Vbg[offset::2][:,:-1], B[offset::2][:,:-1], dRxx[offset::2], cmap='RdBu'), cb3)
+    plt.colorbar(ax1.pcolormesh(Vbg[offset::2], B[offset::2], Rc[offset::2], cmap='RdBu'), cb1)
+    plt.colorbar(ax2.pcolormesh(Vbg[offset::2], B[offset::2], R[offset::2], cmap='RdBu'), cb2)
+    plt.colorbar(ax3.pcolormesh(Vbg[offset::2][:,:-1], B[offset::2][:,:-1], dRc[offset::2], cmap='RdBu'), cb3)
 # --------------------------------------------------------------------------------------
 
 # Plot the data - Row Select -----------------------------------------------------------
@@ -92,9 +91,9 @@ if row_select_plot :
     fig, ax = plt.subplots(1, 1)
     ax.grid(True)
     for i, row_idx in enumerate(row_select_idxs) :
-        ax.plot(Vbg[i%2], Rxx[row_idx], label = f'B = {B[row_idx, 0]} T') 
+        ax.plot(Vbg[i%2], Rc[row_idx], label = f'B = {B[row_idx, 0]} T') 
         ax.set_title("Voltage Sweep at Cst B.")
-        ax.set_ylabel("Rxx ($\Omega$)")
+        ax.set_ylabel("Rc ($\Omega$)")
         ax.set_xlabel("Vbg (V)")
     ax.legend()
 # --------------------------------------------------------------------------------------
@@ -104,10 +103,10 @@ if col_select_plot :
     fig, ax = plt.subplots(1, 1)
     ax.grid(True)
     for i, col_idx in enumerate(col_select_idxs) :
-        ax.plot(1/B[:,col_idx][::2], Rxx[:,col_idx][::2], label = f'Vbg = {Vbg[0,col_idx]} V') 
+        ax.plot(1/B[:,col_idx][::2], Rc[:,col_idx][::2], label = f'Vbg = {Vbg[0,col_idx]} V') 
         ax.set_title("Effect of B at cst Vbg")
         ax.set_xlim(xmin=0, xmax=1)
-        ax.set_ylabel("Rxx ($\Omega$)")
+        ax.set_ylabel("Rc ($\Omega$)")
         ax.set_xlabel("B (T)")
     ax.legend()
 # --------------------------------------------------------------------------------------
