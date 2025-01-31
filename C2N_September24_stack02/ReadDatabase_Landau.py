@@ -8,14 +8,14 @@ from qcodes.dataset import initialise_database, initialise_or_create_database_at
 
 # Excution parameters -----------------------------------------------------------------
 if True :
-    initialise_or_create_database_at("Database/Sofiane_Michael_TBG02.db") #open the right database
+    initialise_or_create_database_at("Database_copy/Sofiane_Michael_TBG02.db") #open the right database
     #experiment_name = "Landau"
-    run_ID = 180
+    run_ID = 192
     odd = True # selects either odd (True) or even (False) rows of the landau map
 
     Landau_plot = True
 
-    row_select_plot = True
+    row_select_plot = False
     row_select_idxs = [0,1,2,3,4,5]
 
     col_select_plot = False
@@ -27,21 +27,21 @@ if True :
     dataset = load_by_run_spec(captured_run_id = run_ID) # access the desired item from the open database
     data = dataset.get_parameter_data() # the dictionary with nested dictionaries for each dependent parameter
 
-    Rc = data['Rc']['Rc'].reshape((401,151))
+    Rc = data['Rc']['Rc'].reshape((95,201))
     print(Rc.shape)
-    R = data['R']['R'].reshape((401,151))
+    R = data['R']['R'].reshape((95,201))
     print(R.shape)
-    B = data['Rc']['IPS120_B'].reshape((401,151))
+    B = data['Rc']['IPS120_B'].reshape((95,201))
     print(B.shape)
-    Vbg = data['Rc']['HV090_CH02_voltage'].reshape((401,151))
+    Vbg = data['Rc']['HV090_CH02_voltage'].reshape((95,201))
     print(Vbg.shape)
     all_parameters = [Rc, R, B, Vbg]
 # --------------------------------------------------------------------------------------
 
 # Transformations on the data -----------------------------------------------------------
 dRc = np.diff(Rc, axis=1) # differentiate the array along the voltage direction - must adapt axes
-if False :
-    M = 1e5
+if True :
+    M = 1e4
     R = np.clip(R, 0, M)  # limit values in the array to not exceed M
     M = 1e5 
     dRc = np.clip(dRc, -M, M)  # limit values in the array to not exceed M
