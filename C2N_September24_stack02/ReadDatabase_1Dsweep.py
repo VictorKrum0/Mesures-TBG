@@ -10,8 +10,8 @@ from qcodes.dataset import initialise_database, initialise_or_create_database_at
 if True :
     initialise_or_create_database_at("Database/Sofiane_Michael_TBG02.db") #open the right database
     #experiment_name = "Landau"
-    run_ID_list = [172,177]
-    x_offsets = [55e-3,-51e-3]
+    run_ID_list = [193,194]
+    x_offsets = [0,0]
 # --------------------------------------------------------------------------------------
 
 ind = 0
@@ -31,6 +31,8 @@ for run_ID in run_ID_list :
         data = dataset.get_parameter_data() # the dictionary with nested dictionaries for each dependent parameter
 
         Rc = data['Rc']['Rc']
+        M = 500 
+        dRc = np.clip(np.diff(Rc),-M,M)
         R = data['R']['R']
         Vbg = data['Rc']['HV090_CH02_voltage']
         all_parameters = [Rc, R, Vbg]
@@ -51,7 +53,7 @@ for run_ID in run_ID_list :
     # Plot the data ------------------------------------------------------------------------
     ax = axes[0]
     ax.grid(True)
-    ax.plot(Vbg + x_offsets[ind], Rc, label = f'Run ID {run_ID}') 
+    ax.plot(Vbg[1:] + x_offsets[ind], dRc, label = f'Run ID {run_ID}') 
     ax.legend()
 
     ax = axes[1]
